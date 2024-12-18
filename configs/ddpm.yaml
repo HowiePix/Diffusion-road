@@ -1,0 +1,33 @@
+seed: 42
+cuda: true
+
+model:
+  arch: unet
+  config:
+    in_channels: 3
+    out_channels: 3
+    model_channels: 64
+    num_res_blocks: 2
+    time_embed_dim: 64
+    class_embed_dim: 64
+    num_classes: 10
+
+method:
+  arch: conditional_ddpm
+  config:
+    sigma: 0
+
+train:
+  learning_rate: 2e-4
+  optimizer: Adam
+  scheduler: StepLR
+  max_epoches: 3000
+  validation_step: 1000
+  checkpoint_step: 100000
+  max_train_steps: 500000
+  grad_clip: 1.0
+
+data:
+  name: CIFAR10
+  batch_size: 256
+  num_workers: 6
