@@ -1,6 +1,8 @@
-# AIGC-Toy-Experiment
+# Diffusion-Road
 
 Toy experiment about image generation
+
+Detail: [Diffusion Road to AIGC](https://zhuanlan.zhihu.com/p/13515967630)
 
 ## Methods
 
@@ -8,7 +10,7 @@ Toy experiment about image generation
 
 Refer to [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)
 
-![flow_matching_cifar10](image/flow_matching_cifar10.gif "FM")
+![flow_matching_cifar10](vis_image/flow_matching_cifar10.gif "FM")
 
 ### GAN
 
