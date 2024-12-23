@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import copy
 import torch
 import torch.nn as nn
@@ -41,30 +41,18 @@ def infer(model, step, ddpm_scheduler, save_dir, device, global_step=None):
 
     model_ = copy.deepcopy(model)
 
-    dt = 1.0 / step
+    # dt = 1.0 / step
 
     x_t = torch.randn(36, 3, 32, 32).to(device)
 
     with torch.no_grad():
         for j in reversed(range(step)):
-            t = torch.tensor([j * dt], device=device)
+            t = torch.tensor([j], device=device).long()
 
             pred_eps = model_(x_t, t, torch.tensor([1], device=device))
-            mean, log_var = ddpm_scheduler.p_mean_variance(
-                x_t,
-                x_t.new_ones([x_t.shape[0], ], dtype=torch.long) * j,
-                pred_eps
+            x_t = ddpm_scheduler.p_sample(
+                x_t, t, pred_eps
             )
-
-            if j > 0:
-                noise = torch.randn_like(x_t)
-            else:
-                noise = 0
-
-            x_t = mean + torch.exp(0.5 * log_var) * noise
-
-        x_t = x_t.view([-1, 3, 32, 32]).clip(-1, 1)
-        x_t = x_t/2 + 0.5
 
     if global_step is None:
         save_image(x_t, os.path.join(save_dir, f"generated_FM_images_step_{step}.png"), nrow=6)
@@ -139,11 +127,11 @@ def main(args):
 
             optimizer.zero_grad()
 
-            t, xt, ut = method.sample(x1)
+            t, xt, eps = method.sample(x1, return_noise=True)
 
             pred = model(xt, t, cond=y)
 
-            loss = F.mse_loss(pred, ut)
+            loss = F.mse_loss(pred, eps)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), train_args.grad_clip)
             loss_meter.update(loss.detach().item())
@@ -154,17 +142,15 @@ def main(args):
             progress_bar.update(1)
             progress_bar.set_postfix({
                 "loss": loss_meter.statistic(),
-                "diff": ut[0].mean().mean().item(),
-                "pred_diff": pred[0].mean().mean().item(),
                 "lr": scheduler.get_last_lr()[0]
             })
 
             if global_step % train_args.validation_step == 0:
 
                 if global_step % (train_args.validation_step*10) == 0:
-                    infer(model, step=100, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device, global_step=global_step)
+                    infer(model, step=1000, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device, global_step=global_step)
                 else:
-                    infer(model, step=100, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device)
+                    infer(model, step=1000, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device)
 
             if global_step % train_args.checkpoint_step == 0:
                 torch.save({

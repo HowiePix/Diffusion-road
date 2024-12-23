@@ -49,7 +49,7 @@ def infer(model, step, save_dir, device, global_step=None, classifier_guidance=7
         for j in range(step):
             t = torch.tensor([j * dt], device=device)
 
-            pred = model_(x_t, t, torch.tensor([1], device=device))
+            pred = model_(x_t, t, torch.randint(10, size=(1,), device=device))
             if classifier_guidance >= 1:
                 pred_free = model_(x_t, t, torch.tensor([-1], device=device))
                 pred = pred_free + classifier_guidance * (pred - pred_free)
