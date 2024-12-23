@@ -34,7 +34,7 @@ def load_method(cfg):
     return method_cls_name.from_config(cfg.config)
 
 
-def infer(model, step, ddpm_scheduler, save_dir, device, global_step=None):
+def infer(model, ddpm_scheduler, save_dir, device, global_step=None):
     model.eval()
 
     os.makedirs(save_dir, exist_ok=True)
@@ -45,8 +45,10 @@ def infer(model, step, ddpm_scheduler, save_dir, device, global_step=None):
 
     x_t = torch.randn(36, 3, 32, 32).to(device)
 
+    step = ddpm_scheduler.num_train_steps
+
     with torch.no_grad():
-        for j in reversed(range(step)):
+        for j in reversed(range(0, step)):
             t = torch.tensor([j], device=device).long()
 
             pred_eps = model_(x_t, t, torch.tensor([1], device=device))
