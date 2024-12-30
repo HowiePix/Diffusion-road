@@ -26,6 +26,8 @@ train:
   checkpoint_step: 100000
   max_train_steps: 500000
   grad_clip: 1.0
+  classifier_free: true
+  cond_drop_rate: 0.2
 
 data:
   name: CIFAR10

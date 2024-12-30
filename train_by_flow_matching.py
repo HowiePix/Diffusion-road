@@ -1,6 +1,7 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 import copy
+import random as rd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,12 +25,10 @@ from common.utils import seed_everything, AvgMeter, training_setup
 # from methods import generate_samples
 
 def load_model(cfg):
-    print(registry.class_name_dict)
     model_cls_name = registry.get_model_class(cfg.arch)
     return model_cls_name.from_config(cfg.config)
 
 def load_method(cfg):
-    print(registry.class_name_dict)
     method_cls_name = registry.get_method_class(cfg.arch)
     return method_cls_name.from_config(cfg.config)
 
@@ -124,6 +123,7 @@ def main(args):
     loss_meter = AvgMeter()
 
     use_cfg = train_args.classifier_free
+    cond_drop_rate = train_args.cond_drop_rate
 
     for epoch in range(1, train_args.max_epoches+1):
         for step, batch in enumerate(loader):
@@ -138,16 +138,14 @@ def main(args):
 
             t, xt, ut = method.sample(x0, x1)
 
-            if use_cfg:
-                xt = torch.cat([xt, xt.clone()], dim=0)
-                t = torch.cat([t, t.clone()], dim=0)
-                y = torch.cat([y, -torch.ones_like(y)], dim=0)
-                x1 = torch.cat([x1, x1.clone()], dim=0)
-                x0 = torch.cat([x0, x0.clone()], dim=0)
-                ut = torch.cat([ut, ut.clone()], dim=0)
-                y = y.to(device)
-            else:
-                y = None
+            if use_cfg and rd.random() < cond_drop_rate:
+                y = -torch.ones_like(y, device=y.device)
+                # xt = torch.cat([xt, xt.clone()], dim=0)
+                # t = torch.cat([t, t.clone()], dim=0)
+                # y = torch.cat([y, -torch.ones_like(y, device=y.device)], dim=0)
+                # x1 = torch.cat([x1, x1.clone()], dim=0)
+                # x0 = torch.cat([x0, x0.clone()], dim=0)
+                # ut = torch.cat([ut, ut.clone()], dim=0)
 
             pred = model(xt, t, cond=y)
 
@@ -162,8 +160,6 @@ def main(args):
             progress_bar.update(1)
             progress_bar.set_postfix({
                 "loss": loss_meter.statistic(),
-                "diff": ut[0].mean().mean().item(),
-                "pred_diff": pred[0].mean().mean().item(),
                 "lr": scheduler.get_last_lr()[0]
             })
 

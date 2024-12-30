@@ -27,14 +27,21 @@ class AvgMeter:
 def training_setup(args):
 
     os.makedirs("./runs", exist_ok=True)
-    num_run_dirs = len(os.listdir("./runs"))
-    curr_run_dir = f"./runs/run_{num_run_dirs}"
+    runs = os.listdir("./runs")
+    runs_idx = list(map(lambda x: int(x.rsplit()[-1]), runs))
+    cur_runs_idx = max(runs_idx) + 1
+    for i in range(cur_runs_idx):
+        if i != runs_idx[i]:
+            cur_runs_idx = i
+            break
+
+    curr_run_dir = f"./runs/run_{cur_runs_idx}"
     os.makedirs(curr_run_dir, exist_ok=False)
 
     import json
     from omegaconf import OmegaConf as OCf
     resovled = OCf.to_container(args, resolve=True)
-    with open(os.path.join(curr_run_dir, f"run_{num_run_dirs}.json"), "w") as f:
+    with open(os.path.join(curr_run_dir, f"run_{cur_runs_idx}.json"), "w") as f:
         json.dump(resovled, fp=f, ensure_ascii=False, indent=4)
 
     logger = logging.getLogger(__name__)

@@ -24,12 +24,10 @@ from common.utils import seed_everything, AvgMeter, training_setup
 # from methods import generate_samples
 
 def load_model(cfg):
-    print(registry.class_name_dict)
     model_cls_name = registry.get_model_class(cfg.arch)
     return model_cls_name.from_config(cfg.config)
 
 def load_method(cfg):
-    print(registry.class_name_dict)
     method_cls_name = registry.get_method_class(cfg.arch)
     return method_cls_name.from_config(cfg.config)
 
@@ -49,7 +47,7 @@ def infer(model, step, save_dir, device, global_step=None, classifier_guidance=7
         for j in range(step):
             t = torch.tensor([j * dt], device=device)
 
-            pred = model_(x_t, t, torch.randint(10, size=(1,), device=device))
+            pred = model_(x_t, t, torch.tensor([1], device=device))
             if classifier_guidance >= 1:
                 pred_free = model_(x_t, t, torch.tensor([-1], device=device))
                 pred = pred_free + classifier_guidance * (pred - pred_free)
@@ -59,11 +57,10 @@ def infer(model, step, save_dir, device, global_step=None, classifier_guidance=7
             inter_t = x_t.view([-1, 3, 32, 32]).clip(-1, 1)
             inter_t = inter_t/2 + 0.5
 
-            save_image(inter_t, os.path.join(save_dir, f"generated_FM_images_step_{j}.png"), nrow=6)
+            # save_image(inter_t, os.path.join(save_dir, f"generated_FM_images_step_{j}.png"), nrow=6)
 
         x_t = x_t.view([-1, 3, 32, 32]).clip(-1, 1)
         x_t = x_t/2 + 0.5
-
 
         save_image(x_t, os.path.join(save_dir, f"generated_FM_images_step_{step}.png"), nrow=6)
 
@@ -95,7 +92,5 @@ if __name__=="__main__":
     seed_everything(args.seed)
 
     args = of.load(args.cfg_file)
-
-    print(args)
 
     main(args)

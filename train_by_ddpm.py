@@ -1,6 +1,7 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import copy
+import random as rd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,7 +35,7 @@ def load_method(cfg):
     return method_cls_name.from_config(cfg.config)
 
 
-def infer(model, ddpm_scheduler, save_dir, device, global_step=None):
+def infer(model, ddpm_scheduler, save_dir, device, global_step=None, classifier_guidance=3.5):
     model.eval()
 
     os.makedirs(save_dir, exist_ok=True)
@@ -52,9 +53,17 @@ def infer(model, ddpm_scheduler, save_dir, device, global_step=None):
             t = torch.tensor([j], device=device).long()
 
             pred_eps = model_(x_t, t, torch.tensor([1], device=device))
+
+            if classifier_guidance >= 1:
+                pred_free = model_(x_t, t, torch.tensor([-1], device=device))
+                pred_eps = pred_eps + classifier_guidance * (pred_eps - pred_free)
+
             x_t = ddpm_scheduler.p_sample(
                 x_t, t, pred_eps
             )
+
+    x_t = x_t.view([-1, 3, 32, 32]).clip(-1, 1)
+    x_t = x_t/2 + 0.5
 
     if global_step is None:
         save_image(x_t, os.path.join(save_dir, f"generated_FM_images_step_{step}.png"), nrow=6)
@@ -121,15 +130,21 @@ def main(args):
 
     loss_meter = AvgMeter()
 
+    use_cfg = train_args.classifier_free
+    cond_drop_rate = train_args.cond_drop_rate
+
     for epoch in range(1, train_args.max_epoches+1):
         for step, batch in enumerate(loader):
-            x1, y = batch
-            x1 = x1.to(device)
+            x0, y = batch
+            x0 = x0.to(device)
             y = y.to(device)
 
             optimizer.zero_grad()
 
-            t, xt, eps = method.sample(x1, return_noise=True)
+            t, xt, eps = method.sample(x0, return_noise=True)
+
+            if use_cfg and rd.random() < cond_drop_rate:
+                y = -torch.ones_like(y, device=y.device)
 
             pred = model(xt, t, cond=y)
 
@@ -150,9 +165,9 @@ def main(args):
             if global_step % train_args.validation_step == 0:
 
                 if global_step % (train_args.validation_step*10) == 0:
-                    infer(model, step=1000, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device, global_step=global_step)
+                    infer(model, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device, global_step=global_step)
                 else:
-                    infer(model, step=1000, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device)
+                    infer(model, ddpm_scheduler=method, save_dir=os.path.join(curr_log_dir, "images"), device=device)
 
             if global_step % train_args.checkpoint_step == 0:
                 torch.save({

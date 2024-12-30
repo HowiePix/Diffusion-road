@@ -11,7 +11,7 @@ model:
     time_embed_dim: 64
     class_embed_dim: 64
     num_classes: 10
-  pretrained_ckpt: runs/run_0/checkpoint-400000.pth.tar.gz
+  pretrained_ckpt: runs/run_0/checkpoint-final.pth.tar.gz
 
 method:
   arch: conditional_flow_matching
@@ -28,6 +28,7 @@ train:
   max_train_steps: 500000
   grad_clip: 1.0
   classifier_free: true
+  cond_drop_rate: 0.2
 
 data:
   name: CIFAR10

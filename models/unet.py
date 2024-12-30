@@ -187,9 +187,10 @@ class UNet(nn.Module):
     def forward(self, x, time_step, cond):
 
         t_emb = self.time_embed(self.get_time_embed(time_step))
-        cond_emb = self.get_cond_embed(cond)
 
-        t_emb = t_emb + cond_emb
+        if not torch.all(cond == -1):
+            cond_emb = self.get_cond_embed(cond)
+            t_emb = t_emb + cond_emb
 
         # 编码器路径
         e1 = self.encoder1(x, t_emb)
