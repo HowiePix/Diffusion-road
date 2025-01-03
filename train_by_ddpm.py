@@ -21,6 +21,7 @@ import models
 import methods
 from common.registry import registry
 from common.utils import seed_everything, AvgMeter, training_setup
+from models.utils import count_parameters
 
 # from methods import generate_samples
 
@@ -80,6 +81,9 @@ def main(args):
 
     model_args, method_args, train_args, data_args = args.model, args.method, args.train, args.data
     model = load_model(model_args).to(device)
+    total_params, trainable_params = count_parameters(model)
+    logger.info(f'Total number of parameters: {total_params}')
+    logger.info(f'Total number of trainable parameters: {trainable_params}')
     method = load_method(method_args).to(device)
 
     cifar10 = CIFAR10(

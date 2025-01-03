@@ -1,0 +1,37 @@
+seed: 42
+cuda: true
+
+model:
+  arch: dit
+  config:
+    image_size: 32
+    patch_size: 4
+    embed_dim: 256
+    time_embed_dim: 256
+    num_heads: 8
+    depth: 16
+    adaln_zero: True
+    num_classes: 10
+  pretrained_ckpt: runs/run_0/checkpoint-final.pth.tar.gz
+
+method:
+  arch: conditional_flow_matching
+  config:
+    sigma: 0
+
+train:
+  learning_rate: 2e-4
+  optimizer: Adam
+  scheduler: StepLR
+  max_epoches: 3000
+  validation_step: 1000
+  checkpoint_step: 100000
+  max_train_steps: 500000
+  grad_clip: 1.0
+  classifier_free: true
+  cond_drop_rate: 0.2
+
+data:
+  name: CIFAR10
+  batch_size: 256
+  num_workers: 6

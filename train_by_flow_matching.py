@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import copy
 import random as rd
 import torch
@@ -13,7 +13,7 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader
 
 import logging
-
+logging.getLogger().setLevel(logging.INFO)
 from tqdm import tqdm
 from omegaconf import OmegaConf as of
 
@@ -21,6 +21,7 @@ import models
 import methods
 from common.registry import registry
 from common.utils import seed_everything, AvgMeter, training_setup
+from models.utils import count_parameters
 
 # from methods import generate_samples
 
@@ -72,6 +73,9 @@ def main(args):
 
     model_args, method_args, train_args, data_args = args.model, args.method, args.train, args.data
     model = load_model(model_args).to(device)
+    total_params, trainable_params = count_parameters(model)
+    logger.info(f'Total number of parameters: {total_params}')
+    logger.info(f'Total number of trainable parameters: {trainable_params}')
     method = load_method(method_args)
 
     cifar10 = CIFAR10(
@@ -151,7 +155,7 @@ def main(args):
 
             loss = F.mse_loss(pred, ut)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), train_args.grad_clip)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), train_args.grad_clip)
             loss_meter.update(loss.detach().item())
 
             optimizer.step()
@@ -191,7 +195,7 @@ def main(args):
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--cfg-file", type=str, default="./configs/flow_matching.yaml")
+    parser.add_argument("--cfg-file", type=str, default="./configs/flow_matching_dit.yaml")
 
     args = parser.parse_args()
     seed_everything(args.seed)

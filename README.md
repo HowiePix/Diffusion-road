@@ -13,6 +13,8 @@ Detail: [Diffusion Road to AIGC](https://zhuanlan.zhihu.com/p/13515967630)
 
 ### Flow Matching
 
+* UNet
+
 ![flow_matching_cifar10](vis_image/flow_matching_cifar10.gif "FM")
 
 ### DDPM
@@ -20,10 +22,14 @@ Detail: [Diffusion Road to AIGC](https://zhuanlan.zhihu.com/p/13515967630)
 
 ## ToDo
 
-### Evaluation
-
-* FID
-* IS
+- [X] Classifier-free Guidance
+- [ ] Evaluator
+  - [ ] FID
+  - [ ] IS
+  - [ ] CLIPScore
+- [X] Model
+  - [X] UNet
+  - [X] DiT-AdaLN(-Zero)
 
 ## How to Use
 

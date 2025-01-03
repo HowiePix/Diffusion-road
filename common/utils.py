@@ -4,6 +4,8 @@ import random
 import numpy as np
 import logging
 
+logging.getLogger().setLevel(logging.INFO)
+
 def seed_everything(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -28,10 +30,11 @@ def training_setup(args):
 
     os.makedirs("./runs", exist_ok=True)
     runs = os.listdir("./runs")
-    runs_idx = list(map(lambda x: int(x.rsplit()[-1]), runs))
+    runs_idx = list(map(lambda x: int(x.rsplit("_")[-1]), runs))
+    print(runs_idx)
     cur_runs_idx = max(runs_idx) + 1
     for i in range(cur_runs_idx):
-        if i != runs_idx[i]:
+        if i not in runs_idx:
             cur_runs_idx = i
             break
 
