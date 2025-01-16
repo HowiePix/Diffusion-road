@@ -26,6 +26,7 @@ class ConditionalDDPM:
         beta_end=0.02,
         betas=None,
         beta_schedule="linear",
+        device="cuda"
     ):
 
         scale = 1000 / num_train_steps
@@ -34,7 +35,7 @@ class ConditionalDDPM:
         if betas is not None:
             self.betas = betas
         elif beta_schedule == "linear":
-            self.betas = torch.linspace(beta_start, beta_end, steps=num_train_steps, dtype=torch.float32)
+            self.betas = torch.linspace(beta_start, beta_end, steps=num_train_steps, dtype=torch.float32, device=device)
 
         self.alphas = 1.0 - self.betas
         self.alphas_bar = torch.cumprod(self.alphas, dim=0) # a_t_bar
@@ -51,23 +52,6 @@ class ConditionalDDPM:
         self.posterior_mean_coef_xt = torch.sqrt(self.alphas) * (1. - self.alphas_bar_prev) / (1. - self.alphas_bar)
 
         self.num_train_steps = num_train_steps
-
-    def to(self, device):
-        self.betas = self.betas.to(device)
-        self.alphas = self.alphas.to(device)
-        self.alphas_bar = self.alphas_bar.to(device)
-        self.alphas_bar_prev = self.alphas_bar_prev.to(device)
-        self.sqrt_alphas_bar = self.sqrt_alphas_bar.to(device)
-        self.sqrt_one_minus_alphas_bar = self.sqrt_one_minus_alphas_bar.to(device)
-        self.sqrt_recip_alphas_bar = self.sqrt_recip_alphas_bar.to(device)
-        self.sqrt_recipm1_alphas_bar = self.sqrt_recipm1_alphas_bar.to(device)
-
-        self.posterior_var = self.posterior_var.to(device)
-        self.posterior_log_var_clipped = self.posterior_log_var_clipped.to(device)
-        self.posterior_mean_coef_x0 = self.posterior_mean_coef_x0.to(device)
-        self.posterior_mean_coef_xt = self.posterior_mean_coef_xt.to(device)
-
-        return self
 
     def sample_noise_like(self, x):
         return torch.randn_like(x)
@@ -164,5 +148,6 @@ class ConditionalDDPM:
         beta_end = cfg.get("beta_end", 0.02)
         betas = cfg.get("betas", None)
         beta_scheduler = cfg.get("beta_scheduler", "linear")
+        device = cfg.get("device", "cuda")
 
-        return cls(num_train_steps, beta_start, beta_end, betas, beta_scheduler)
+        return cls(num_train_steps, beta_start, beta_end, betas, beta_scheduler, device)

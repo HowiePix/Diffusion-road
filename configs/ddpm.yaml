@@ -11,6 +11,7 @@ model:
     time_embed_dim: 64
     class_embed_dim: 64
     num_classes: 10
+  pretrained_ckpt: runs/run_4/checkpoint-final.pth.tar.gz
 
 method:
   arch: conditional_ddpm

@@ -19,6 +19,7 @@ Detail: [Diffusion Road to AIGC](https://zhuanlan.zhihu.com/p/13515967630)
 
 ### DDPM
 
+![ddpm](vis_image/ddpm_cifar10.gif "DDPM")
 
 ## ToDo
 

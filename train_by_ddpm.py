@@ -84,7 +84,7 @@ def main(args):
     total_params, trainable_params = count_parameters(model)
     logger.info(f'Total number of parameters: {total_params}')
     logger.info(f'Total number of trainable parameters: {trainable_params}')
-    method = load_method(method_args).to(device)
+    method = load_method(method_args)
 
     cifar10 = CIFAR10(
         root="./data",
